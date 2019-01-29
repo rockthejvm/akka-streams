@@ -34,8 +34,8 @@ object MaterializingStreams extends App {
   }
 
   // sugars
-  Source(1 to 10).runWith(Sink.reduce(_ + _)) // source.to(Sink.reduce)(Keep.right)
-  Source(1 to 10).runReduce(_ + _) // same
+  Source(1 to 10).runWith(Sink.reduce[Int](_ + _)) // source.to(Sink.reduce)(Keep.right)
+  Source(1 to 10).runReduce[Int](_ + _) // same
 
   // backwards
   Sink.foreach[Int](println).runWith(Source.single(42)) // source(..).to(sink...).run()
