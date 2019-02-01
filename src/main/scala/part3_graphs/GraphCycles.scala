@@ -1,7 +1,7 @@
 package part3_graphs
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, RunnableGraph, Sink, Source, Zip}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, RunnableGraph, Sink, Source, Zip, ZipWith}
 import akka.stream.{ActorMaterializer, ClosedShape, OverflowStrategy, UniformFanInShape}
 
 object GraphCycles extends App {
@@ -110,23 +110,65 @@ object GraphCycles extends App {
     UniformFanInShape(extractLast.out, zip.in0, zip.in1)
   }
 
-  val fiboGraph = RunnableGraph.fromGraph(
-    GraphDSL.create() { implicit builder =>
-      import GraphDSL.Implicits._
+//  val fiboGraph = RunnableGraph.fromGraph(
+//    GraphDSL.create() { implicit builder =>
+//      import GraphDSL.Implicits._
+//
+//      val source1 = builder.add(Source.single[BigInt](1))
+//      val source2 = builder.add(Source.single[BigInt](1))
+//      val sink = builder.add(Sink.foreach[BigInt](println))
+//      val fibo = builder.add(fibonacciGenerator)
+//
+//      source1 ~> fibo.in(0)
+//      source2 ~> fibo.in(1)
+//      fibo.out ~> sink
+//
+//      ClosedShape
+//    }
+//  )
+//
+//  fiboGraph.run()
 
-      val source1 = builder.add(Source.single[BigInt](1))
-      val source2 = builder.add(Source.single[BigInt](1))
-      val sink = builder.add(Sink.foreach[BigInt](println))
-      val fibo = builder.add(fibonacciGenerator)
+  /**
+    * ********************
+    * Old solution (more complicated)
+    * ********************
+    */
 
-      source1 ~> fibo.in(0)
-      source2 ~> fibo.in(1)
-      fibo.out ~> sink
+  val complicatedFibonacciGenerator = GraphDSL.create() { implicit builder =>
+    import GraphDSL.Implicits._
 
-      ClosedShape
-    }
-  )
+    // two big feeds: one with the "last" number, and one with the "next-to-last" (previous) Fibonacci number
+    val lastFeed = builder.add(MergePreferred[BigInt](1))
+    val previousFeed = builder.add(MergePreferred[BigInt](1))
 
-  fiboGraph.run()
+    /*
+      The "last" feed will be split into 3:
+      - the final output of the shape
+      - a zip to sum with the previousFeed
+      - a feedback loop to the previousFeed (the current "last" will become the next "previous")
+    */
+    val broadcastLast = builder.add(Broadcast[BigInt](3))
 
+    // the actual Fibonacci logic
+    val fiboLogic = builder.add(ZipWith((last: BigInt, previous: BigInt) => {
+      Thread.sleep(100) // so you can actually see the result growing
+      last + previous
+    }))
+
+    // hopefully connections are traceable on paper
+
+                broadcastLast ~>  previousFeed.preferred // feedback loop: current "last" becomes next "previous"
+    lastFeed ~> broadcastLast ~>  fiboLogic.in0
+                previousFeed  ~>  fiboLogic.in1
+    lastFeed.preferred        <~  fiboLogic.out // feedback loop: next "last" is the sum of current "last" and "previous"
+
+    UniformFanInShape(
+      broadcastLast.out(2),   // the unconnected output
+      lastFeed.in(0),
+      previousFeed.in(0)      // and the regular ports of the MergePreferred components
+    )
+
+    // So as you can see, quite involved. But it gives the same output!
+  }
 }
