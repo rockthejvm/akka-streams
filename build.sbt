@@ -1,4 +1,4 @@
-name := "udemy-akka-streams"
+name := "akka-streams"
 
 version := "0.1"
 
