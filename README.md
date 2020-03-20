@@ -1,6 +1,6 @@
 # The official repository for the Rock the JVM Akka Streams with Scala course
 
-This repository contains the code we wrote during  [Rock the JVM's Akka Streams with Scala](https://www.udemy.com/akka-streams) course on Udemy. Unless explicitly mentioned, the code in this repository is exactly what was caught on camera.
+This repository contains the code we wrote during  [Rock the JVM's Akka Streams with Scala](https://rockthejvm.com/course/akka-streams) course. Unless explicitly mentioned, the code in this repository is exactly what was caught on camera.
 
 ### How to install
 - either clone the repo or download as zip
@@ -8,12 +8,23 @@ This repository contains the code we wrote during  [Rock the JVM's Akka Streams 
 
 No need to do anything else, as the IDE will take care to download and apply the appropriate library dependencies.
 
+### How to start
+
+Checkout the start tag:
+
+```
+git checkout start
+```
+
+and open the project in IntelliJ as usual.
+
 ### How to run an intermediate state
 
 The repository was built while recording the lectures. Prior to each lecture, I tagged each commit so you can easily go back to an earlier state of the repo!
 
 The tags are as follows:
 
+* `start`
 * `1.1-scala-recap`
 * `1.2-akka-recap`
 * `2.1-first-principles`
