@@ -1,5 +1,7 @@
 # The official repository for the Rock the JVM Akka Streams with Scala course
 
+**(for the Udemy version, click [here](https://github.com/rockthejvm/udemy-akka-streams))**
+
 This repository contains the code we wrote during  [Rock the JVM's Akka Streams with Scala](https://rockthejvm.com/course/akka-streams) course. Unless explicitly mentioned, the code in this repository is exactly what was caught on camera.
 
 ### How to install
