@@ -22,8 +22,7 @@ object Practice extends App {
   val userSink: Sink[User, Future[Done]]  = Sink.foreach[User](println)
   val userGraph: Future[Int]              = userSource.via(transForm).runWith(Sink.head)
   userGraph.onComplete {
-    case Success(value)     => s"result of userGraph: $value"
-    case Failure(exception) => exception
+    case Success(value)     => println(s"result of userGraph: $value")
+    case Failure(exception) => println(exception)
   }
-  userGraph
 }
