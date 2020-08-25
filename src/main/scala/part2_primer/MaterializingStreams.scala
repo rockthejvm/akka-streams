@@ -1,22 +1,24 @@
 package part2_primer
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source}
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 object MaterializingStreams extends App {
 
-  implicit val system = ActorSystem("MaterializingStreams")
-  implicit val materializer = ActorMaterializer()
+  implicit val system: ActorSystem             = ActorSystem("MaterializingStreams")
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
   import system.dispatcher
 
-  val simpleGraph = Source(1 to 10).to(Sink.foreach(println))
+  val simpleGraph: RunnableGraph[NotUsed] = Source(1 to 10).to(Sink.foreach(println))
   //  val simpleMaterializedValue = simpleGraph.run()
 
-  val source = Source(1 to 10)
-  val sink = Sink.reduce[Int]((a, b) => a + b)
+  val source: Source[Int, NotUsed] = Source(1 to 10)
+  val sink: Sink[Int, Future[Int]] = Sink.reduce[Int]((a, b) => a + b)
   //  val sumFuture = source.runWith(sink)
   //  sumFuture.onComplete {
   //    case Success(value) => println(s"The sum of all elements is :$value")
@@ -25,17 +27,17 @@ object MaterializingStreams extends App {
 
   // choosing materialized values
   val simpleSource = Source(1 to 10)
-  val simpleFlow = Flow[Int].map(x => x + 1)
-  val simpleSink = Sink.foreach[Int](println)
-  val graph = simpleSource.viaMat(simpleFlow)(Keep.right).toMat(simpleSink)(Keep.right)
-  graph.run().onComplete {
-    case Success(_) => println("Stream processing finished.")
-    case Failure(exception) => println(s"Stream processing failed with: $exception")
-  }
+  val simpleFlow   = Flow[Int].map(x => x + 1)
+  val simpleSink   = Sink.foreach[Int](println)
+  val graph        = simpleSource.viaMat(simpleFlow)(Keep.right).toMat(simpleSink)(Keep.right)
+//  graph.run().onComplete {
+//    case Success(_)         => println("Stream processing finished.")
+//    case Failure(exception) => println(s"Stream processing failed with: $exception")
+//  }
 
   // sugars
   Source(1 to 10).runWith(Sink.reduce[Int](_ + _)) // source.to(Sink.reduce)(Keep.right)
-  Source(1 to 10).runReduce[Int](_ + _) // same
+  Source(1 to 10).runReduce[Int](_ + _)            // same
 
   // backwards
   Sink.foreach[Int](println).runWith(Source.single(42)) // source(..).to(sink...).run()
@@ -47,23 +49,25 @@ object MaterializingStreams extends App {
     * - compute the total word count out of a stream of sentences
     *   - map, fold, reduce
     */
-  val f1 = Source(1 to 10).toMat(Sink.last)(Keep.right).run()
-  val f2 = Source(1 to 10).runWith(Sink.last)
+  val f1: Future[Int] = Source(1 to 10).toMat(Sink.last)(Keep.right).run()
+  val f2: Future[Int] = Source(1 to 10).runWith(Sink.last)
 
-  val sentenceSource = Source(List(
-    "Akka is awesome",
-    "I love streams",
-    "Materialized values are killing me"
-  ))
-  val wordCountSink = Sink.fold[Int, String](0)((currentWords, newSentence) => currentWords + newSentence.split(" ").length)
-  val g1 = sentenceSource.toMat(wordCountSink)(Keep.right).run()
-  val g2 = sentenceSource.runWith(wordCountSink)
-  val g3 = sentenceSource.runFold(0)((currentWords, newSentence) => currentWords + newSentence.split(" ").length)
+  val sentenceSource = Source(
+    List(
+      "Akka is awesome",
+      "I love streams",
+      "Materialized values are killing me"
+    )
+  )
+  val wordCountSink: Sink[String, Future[Int]] = Sink.fold[Int, String](0)((currentWords, newSentence) => currentWords + newSentence.split(" ").length)
+  //  val g1: Future[Int]                          = sentenceSource.toMat(wordCountSink)(Keep.right).run()
+  //  val g2: Future[Int]                          = sentenceSource.runWith(wordCountSink)
+  //  val g3: Future[Int]                          = sentenceSource.runFold(0)((currentWords, newSentence) => currentWords + newSentence.split(" ").length)
 
-  val wordCountFlow = Flow[String].fold[Int](0)((currentWords, newSentence) => currentWords + newSentence.split(" ").length)
-  val g4 = sentenceSource.via(wordCountFlow).toMat(Sink.head)(Keep.right).run()
-  val g5 = sentenceSource.viaMat(wordCountFlow)(Keep.left).toMat(Sink.head)(Keep.right).run()
-  val g6 = sentenceSource.via(wordCountFlow).runWith(Sink.head)
-  val g7 = wordCountFlow.runWith(sentenceSource, Sink.head)._2
+  val wordCountFlow: Flow[String, Int, NotUsed] = Flow[String].fold[Int](0)((currentWords, newSentence) => currentWords + newSentence.split(" ").length)
+//  val g4: Future[Int]                           = sentenceSource.via(wordCountFlow).toMat(Sink.head)(Keep.right).run()
+//  val g5: Future[Int]                           = sentenceSource.viaMat(wordCountFlow)(Keep.left).toMat(Sink.head)(Keep.right).run()
+//  val g6: Future[Int]                           = sentenceSource.via(wordCountFlow).runWith(Sink.head)
+//  val g7: Future[Int]                           = wordCountFlow.runWith(sentenceSource, Sink.head)._2
 
 }

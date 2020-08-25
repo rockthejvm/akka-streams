@@ -1,32 +1,38 @@
 package part2_primer
 
+import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.{Flow, RunnableGraph, Sink, Source}
 
 import scala.concurrent.Future
 
 object FirstPrinciples extends App {
 
-  implicit val system = ActorSystem("FirstPrinciples")
-  implicit val materializer = ActorMaterializer()
+  implicit val system: ActorSystem             = ActorSystem("FirstPrinciples")
+  implicit val materializer: ActorMaterializer = ActorMaterializer() // allows to run akka streams components
 
   // sources
-  val source = Source(1 to 10)
+  val source: Source[Int, NotUsed] = Source(1 to 10)
   // sinks
-  val sink = Sink.foreach[Int](println)
+  val sink: Sink[Int, Future[Done]] = Sink.foreach[Int](println) // for input of sink apply println
 
-  val graph = source.to(sink)
+  val graph: RunnableGraph[NotUsed] = source.to(sink)
+  // 1 to 10 emitted form the source and received in the sink: -> prints 1 2 3 4 5 6 7 8 9 10
   //  graph.run()
 
-  // flows transform elements
-  val flow = Flow[Int].map(x => x + 1)
-  val sourceWithFlow = source.via(flow)
+  // flows job is to transform elements
+  val flow: Flow[Int, Int, NotUsed] = Flow[Int].map(x => x + 1)
+
+  // Composing Source and a Flow result the resulting component is emit elements and that's done by Source
+  val sourceWithFlow: Source[Int, NotUsed] = source.via(flow) // attach flow to source
+
   val flowWithSink = flow.to(sink)
 
+  // All three do the same
   //  sourceWithFlow.to(sink).run()
   //  source.to(flowWithSink).run()
-  //  source.via(flow).to(sink).run()
+  //  source.via(flow).to(sink).run() // most used?
 
   // nulls are NOT allowed
   // val illegalSource = Source.single[String](null)
@@ -34,27 +40,27 @@ object FirstPrinciples extends App {
   // use Options instead
 
   // various kinds of sources
-  val finiteSource = Source.single(1)
+  val finiteSource        = Source.single(1)
   val anotherFiniteSource = Source(List(1, 2, 3))
-  val emptySource = Source.empty[Int]
-  val infiniteSource = Source(Stream.from(1)) // do not confuse an Akka stream with a "collection" Stream
+  val emptySource         = Source.empty[Int]
+  val infiniteSource      = Source(Stream.from(1)) // do not confuse an Akka stream with a "collection" Stream
   import scala.concurrent.ExecutionContext.Implicits.global
   val futureSource = Source.fromFuture(Future(42))
 
   // sinks
-  val theMostBoringSink = Sink.ignore
-  val foreachSink = Sink.foreach[String](println)
-  val headSink = Sink.head[Int] // retrieves head and then closes the stream
-  val foldSink = Sink.fold[Int, Int](0)((a, b) => a + b)
+  val theMostBoringSink: Sink[Any, Future[Done]] = Sink.ignore
+  val foreachSink: Sink[String, Future[Done]]    = Sink.foreach[String](println)
+  val headSink: Sink[Int, Future[Int]]           = Sink.head[Int] // retrieves head and then closes the stream
+  val foldSink: Sink[Int, Future[Int]]           = Sink.fold[Int, Int](0)((a, b) => a + b)
 
   // flows - usually mapped to collection operators
-  val mapFlow = Flow[Int].map(x => 2 * x)
-  val takeFlow = Flow[Int].take(5)
+  val mapFlow: Flow[Int, Int, NotUsed] = Flow[Int].map(x => 2 * x)
+  val takeFlow                         = Flow[Int].take(5)
   // drop, filter
   // NOT have flatMap
 
-  // source -> flow -> flow -> ... -> sink
-  val doubleFlowGraph = source.via(mapFlow).via(takeFlow).to(sink)
+  // Constructing a stream: source -> flow -> flow -> ... -> sink
+  val doubleFlowGraph: RunnableGraph[NotUsed] = source.via(mapFlow).via(takeFlow).to(sink)
   //  doubleFlowGraph.run()
 
   // syntactic sugars
@@ -66,15 +72,15 @@ object FirstPrinciples extends App {
 
   /**
     * Exercise: create a stream that takes the names of persons, then you will keep the first 2 names with length > 5 characters.
-    *
     */
-  val names = List("Alice", "Bob", "Charlie", "David", "Martin", "AkkaStreams")
-  val nameSource = Source(names)
-  val longNameFlow = Flow[String].filter(name => name.length > 5)
-  val limitFlow = Flow[String].take(2)
-  val nameSink = Sink.foreach[String](println)
+  val names: List[String]                         = List("Alice", "Bob", "Charlie", "David", "Martin", "AkkaStreams")
+  val nameSource: Source[String, NotUsed]         = Source(names)
+  val longNameFlow: Flow[String, String, NotUsed] = Flow[String].filter(name => name.length > 5) // This flow receive elements of String
+  val limitFlow: Flow[String, String, NotUsed]    = Flow[String].take(2)
+  val nameSink: Sink[String, Future[Done]]        = Sink.foreach[String](println)
 
-  nameSource.via(longNameFlow).via(limitFlow).to(nameSink).run()
-  nameSource.filter(_.length > 5).take(2).runForeach(println)
+  val composeGraph: RunnableGraph[NotUsed] = nameSource.via(longNameFlow).via(limitFlow).to(nameSink)
+  composeGraph.run() // runs the stream
+  val alias: Future[Done] = nameSource.filter(_.length > 5).take(2).runForeach(println) // does the same as line above
 
 }
