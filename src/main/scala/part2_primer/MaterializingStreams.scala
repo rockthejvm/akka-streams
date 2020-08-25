@@ -1,6 +1,6 @@
 package part2_primer
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source}
@@ -26,10 +26,10 @@ object MaterializingStreams extends App {
   //  }
 
   // choosing materialized values
-  val simpleSource = Source(1 to 10)
-  val simpleFlow   = Flow[Int].map(x => x + 1)
-  val simpleSink   = Sink.foreach[Int](println)
-  val graph        = simpleSource.viaMat(simpleFlow)(Keep.right).toMat(simpleSink)(Keep.right)
+  val simpleSource                        = Source(1 to 10)
+  val simpleFlow: Flow[Int, Int, NotUsed] = Flow[Int].map(x => x + 1)
+  val simpleSink                          = Sink.foreach[Int](println)
+  val graph: RunnableGraph[Future[Done]]  = simpleSource.viaMat(simpleFlow)(Keep.right).toMat(simpleSink)(Keep.right)
 //  graph.run().onComplete {
 //    case Success(_)         => println("Stream processing finished.")
 //    case Failure(exception) => println(s"Stream processing failed with: $exception")
