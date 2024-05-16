@@ -12,7 +12,7 @@
             <option value="$PROJECT_DIR$/project" />
           </set>
         </option>
-        <option name="sbtVersion" value="1.9.9" />
+        <option name="sbtVersion" value="1.9.4" />
       </SbtProjectSettings>
     </option>
   </component>
