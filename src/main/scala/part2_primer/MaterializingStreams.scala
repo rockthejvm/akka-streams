@@ -9,7 +9,8 @@ import scala.util.{Failure, Success}
 object MaterializingStreams extends App {
 
   implicit val system = ActorSystem("MaterializingStreams")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
   import system.dispatcher
 
   val simpleGraph = Source(1 to 10).to(Sink.foreach(println))

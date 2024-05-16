@@ -11,7 +11,8 @@ import scala.util.Random
 object FaultTolerance extends App {
 
   implicit val system = ActorSystem("FaultTolerance")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   // 1 - logging
   val faultySource = Source(1 to 10).map(e => if (e == 6) throw new RuntimeException else e)
@@ -33,10 +34,12 @@ object FaultTolerance extends App {
     .to(Sink.ignore)
     //    .run()
 
+
+
   // 4 - backoff supervision
   val restartSource = RestartSource.onFailuresWithBackoff(
-    minBackoff = 1 second,
-    maxBackoff = 30 seconds,
+    minBackoff = 1.seconds,
+    maxBackoff = 30.seconds,
     randomFactor = 0.2,
   )(() => {
     val randomNumber = new Random().nextInt(20)

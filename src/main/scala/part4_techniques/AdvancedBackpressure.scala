@@ -9,7 +9,8 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 object AdvancedBackpressure extends App {
 
   implicit val system = ActorSystem("AdvancedBackpressure")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   // control backpressure
   val controlledFlow = Flow[Int].map(_ * 2).buffer(10, OverflowStrategy.dropHead)
@@ -59,7 +60,7 @@ object AdvancedBackpressure extends App {
     Slow producers: extrapolate/expand
    */
   import scala.concurrent.duration._
-  val slowCounter = Source(Stream.from(1)).throttle(1, 1 second)
+  val slowCounter = Source(Stream.from(1)).throttle(1, 1.second)
   val hungrySink = Sink.foreach[Int](println)
 
   val extrapolator = Flow[Int].extrapolate(element => Iterator.from(element))

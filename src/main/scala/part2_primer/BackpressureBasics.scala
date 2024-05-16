@@ -7,7 +7,8 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 object BackpressureBasics extends App {
 
   implicit val system = ActorSystem("BackpressureBasics")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   val fastSource = Source(1 to 1000)
   val slowSink = Sink.foreach[Int] { x =>
@@ -44,7 +45,7 @@ object BackpressureBasics extends App {
   fastSource.async
     .via(bufferedFlow).async
     .to(slowSink)
-//    .run()
+    .run()
 
   /*
     1-16: nobody is backpressured
@@ -65,5 +66,5 @@ object BackpressureBasics extends App {
 
   // throttling
   import scala.concurrent.duration._
-  fastSource.throttle(10, 1 second).runWith(Sink.foreach(println))
+  fastSource.throttle(10, 1.second).runWith(Sink.foreach(println))
 }

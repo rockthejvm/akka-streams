@@ -9,7 +9,8 @@ import scala.concurrent.Future
 object FirstPrinciples extends App {
 
   implicit val system = ActorSystem("FirstPrinciples")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   // sources
   val source = Source(1 to 10)

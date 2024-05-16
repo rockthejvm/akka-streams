@@ -12,7 +12,8 @@ import scala.util.{Failure, Random, Success}
 object CustomOperators extends App {
 
   implicit val system = ActorSystem("CustomOperators")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   // 1 - a custom source which emits random numbers until canceled
 

@@ -7,7 +7,8 @@ import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink, Source}
 object BidirectionalFlows extends App {
 
   implicit val system = ActorSystem("BidirectionalFlows")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   /*
     Example: cryptography

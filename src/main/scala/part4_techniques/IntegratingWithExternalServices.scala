@@ -12,7 +12,8 @@ import scala.concurrent.Future
 object IntegratingWithExternalServices extends App {
 
   implicit val system = ActorSystem("IntegratingWithExternalServices")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
   //  import system.dispatcher // not recommended in practice for mapAsync
   implicit val dispatcher = system.dispatchers.lookup("dedicated-dispatcher")
 
@@ -86,7 +87,7 @@ object IntegratingWithExternalServices extends App {
 
   import akka.pattern.ask
   import scala.concurrent.duration._
-  implicit val timeout = Timeout(3 seconds)
+  implicit val timeout = Timeout(3.seconds)
   val pagerActor = system.actorOf(Props[PagerActor], "pagerActor")
   val alternativePagedEngineerEmails = infraEvents.mapAsync(parallelism = 4)(event => (pagerActor ? event).mapTo[String])
   alternativePagedEngineerEmails.to(pagedEmailsSink).run()

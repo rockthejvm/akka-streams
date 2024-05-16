@@ -11,7 +11,8 @@ import scala.concurrent.duration._
 object CustomGraphShapes extends App {
 
   implicit val system = ActorSystem("CustomGraphShapes")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   // balance 2x3 shape
   case class Balance2x3 (
@@ -56,8 +57,8 @@ object CustomGraphShapes extends App {
     GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val slowSource = Source(Stream.from(1)).throttle(1, 1 second)
-      val fastSource = Source(Stream.from(1)).throttle(2, 1 second)
+      val slowSource = Source(Stream.from(1)).throttle(1, 1.second)
+      val fastSource = Source(Stream.from(1)).throttle(2, 1.second)
 
       def createSink(index: Int) = Sink.fold(0)((count: Int, element: Int) => {
         println(s"[sink $index] Received $element, current count is $count")
@@ -108,8 +109,8 @@ object CustomGraphShapes extends App {
     GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val slowSource = Source(Stream.from(1)).throttle(1, 1 second)
-      val fastSource = Source(Stream.from(1)).throttle(2, 1 second)
+      val slowSource = Source(Stream.from(1)).throttle(1, 1.second)
+      val fastSource = Source(Stream.from(1)).throttle(2, 1.second)
 
       def createSink(index: Int) = Sink.fold(0)((count: Int, element: Int) => {
         println(s"[sink $index] Received $element, current count is $count")

@@ -8,7 +8,8 @@ import akka.stream.scaladsl.{Balance, Broadcast, Flow, GraphDSL, Merge, Runnable
 object GraphBasics extends App {
 
   implicit val system = ActorSystem("GraphBasics")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   val input = Source(1 to 1000)
   val incrementer = Flow[Int].map(x => x + 1) // hard computation
@@ -71,8 +72,8 @@ object GraphBasics extends App {
     */
 
   import scala.concurrent.duration._
-  val fastSource = input.throttle(5, 1 second)
-  val slowSource = input.throttle(2, 1 second)
+  val fastSource = input.throttle(5, 1.second)
+  val slowSource = input.throttle(2, 1.second)
 
   val sink1 = Sink.fold[Int, Int](0)((count, _) => {
     println(s"Sink 1 number of elements: $count")

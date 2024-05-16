@@ -7,7 +7,8 @@ import akka.stream.{ActorMaterializer, ClosedShape, OverflowStrategy, UniformFan
 object GraphCycles extends App {
 
   implicit val system = ActorSystem("GraphCycles")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   val accelerator = GraphDSL.create() { implicit builder =>
     import GraphDSL.Implicits._

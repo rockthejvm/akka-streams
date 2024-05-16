@@ -7,7 +7,8 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 object OperatorFusion extends App {
 
   implicit val system = ActorSystem("OperatorFusion")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   val simpleSource = Source(1 to 1000)
   val simpleFlow = Flow[Int].map(_ + 1)

@@ -9,7 +9,8 @@ import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, RunnableGraph, Sink, Sou
 object MoreOpenGraphs extends App {
 
   implicit val system = ActorSystem("MoreOpenGraphs")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   /*
     Example: Max3 operator

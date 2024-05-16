@@ -1,15 +1,21 @@
 package playground
 
+import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.stream.ActorAttributes.supervisionStrategy
+import akka.stream.Supervision.resumingDecider
+import akka.stream.{ActorMaterializer, Attributes, FlowShape, Inlet, Outlet}
 import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source}
+import akka.stream.stage.{GraphStage, GraphStageLogic, GraphStageWithMaterializedValue, InHandler, OutHandler}
+import akka.testkit.TestKit
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
 object Playground extends App {
 
   implicit val system = ActorSystem("AkkaStreamsDemo")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
   import system.dispatcher
 
   val source = Source(1 to 10)
@@ -23,5 +29,13 @@ object Playground extends App {
   val sum: Future[Int] = runnable.run()
   sum.onComplete(x => println(s"Sum: $x"))
 
+  val independentFlow = Flow[String].map(_.reverse)
+  import akka.stream.scaladsl.FlowWithContext
 
+  val independentFlowWithContext: FlowWithContext[String, Int, String, Int, NotUsed] =
+    independentFlow.asFlowWithContext[String, Int, Int]((string, ctx) => string)(string => 0)
+
+  val flowWithContext: FlowWithContext[String, Int, String, Int, NotUsed] = ???
+  val mapped = flowWithContext.map(_.reverse)
+  val mappedVia = flowWithContext.via(independentFlowWithContext)
 }

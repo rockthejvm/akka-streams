@@ -10,7 +10,8 @@ import scala.util.{Failure, Success}
 object GraphMaterializedValues extends App {
 
   implicit val system = ActorSystem("GraphMaterializedValues")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   val wordSource = Source(List("Akka", "is", "awesome", "rock", "the", "jvm"))
   val printer = Sink.foreach[String](println)

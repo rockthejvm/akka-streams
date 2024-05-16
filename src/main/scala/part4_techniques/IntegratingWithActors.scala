@@ -10,7 +10,8 @@ import scala.concurrent.duration._
 object IntegratingWithActors extends App {
 
   implicit val system = ActorSystem("IntegratingWithActors")
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   class SimpleActor extends Actor with ActorLogging {
     override def receive: Receive = {
@@ -29,7 +30,7 @@ object IntegratingWithActors extends App {
   val numbersSource = Source(1 to 10)
 
   // actor as a flow
-  implicit val timeout = Timeout(2 seconds)
+  implicit val timeout = Timeout(2.seconds)
   val actorBasedFlow = Flow[Int].ask[Int](parallelism = 4)(simpleActor)
 
   //  numbersSource.via(actorBasedFlow).to(Sink.ignore).run()

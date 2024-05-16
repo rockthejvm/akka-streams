@@ -5,17 +5,21 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.testkit.scaladsl.{TestSink, TestSource}
 import akka.testkit.{TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.wordspec.AnyWordSpecLike
+
 class TestingStreamsSpec extends TestKit(ActorSystem("TestingAkkaStreams"))
-  with WordSpecLike
+  with AnyWordSpecLike
   with BeforeAndAfterAll {
 
-  implicit val materializer = ActorMaterializer()
+  // this line needs to be here for Akka < 2.6
+  // // this line needs to be here for Akka < 2.6
+  // implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   override def afterAll(): Unit = TestKit.shutdownActorSystem(system)
 
@@ -27,7 +31,7 @@ class TestingStreamsSpec extends TestKit(ActorSystem("TestingAkkaStreams"))
       val simpleSink = Sink.fold(0)((a: Int, b: Int) => a + b)
 
       val sumFuture = simpleSource.toMat(simpleSink)(Keep.right).run()
-      val sum = Await.result(sumFuture, 2 seconds)
+      val sum = Await.result(sumFuture, 2.seconds)
       assert(sum == 55)
     }
 
